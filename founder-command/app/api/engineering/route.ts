@@ -1,0 +1,5 @@
+import {engineeringAction} from '../../../lib/engineering';
+export async function GET(){try{return Response.json(await engineeringAction({action:'status'}),{headers:{'Cache-Control':'private, no-store'}})}catch{return Response.json({error:'Engineering status unavailable'},{status:503})}}
+// Dispatch authenticates owner-private service requests before they reach this route.
+// A browser caller has the same owner access; cross-origin form requests are rejected.
+export async function POST(r:Request){try{const origin=r.headers.get('origin');if(origin&&new URL(origin).host!==new URL(r.url).host)return Response.json({error:'Cross-origin request denied'},{status:403});if(!r.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'JSON required'},{status:415});if(Number(r.headers.get('content-length')||0)>30000)throw Error('Request too large');return Response.json(await engineeringAction(await r.json()),{headers:{'Cache-Control':'private, no-store'}})}catch(e){return Response.json({error:e instanceof Error?e.message:'Engineering request failed'},{status:400})}}
